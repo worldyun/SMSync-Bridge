@@ -1,0 +1,12 @@
+server:
+  port: 8080  # 服务端口
+
+  websocket:
+    path: /ws
+    url: ws://localhost:8080/ws # websocket连接地址
+    accessKeyLength: 16   # accessKey长度
+    maxAccessKeyNum: 40   # 最大允许的accessKey数量 0表示不限制
+  
+  db:
+    dbFilePath: data/sqlite3.db
+    

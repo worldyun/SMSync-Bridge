@@ -1,0 +1,20 @@
+{
+  "name": "smsync-bridge",
+  "version": "0.0.1",
+  "description": "",
+  "license": "MIT",
+  "author": "WorldYun",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "node -e \"require('fs').rmSync('./data/config.yml', { force: true });\" && nodemon app.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "express": "^5.1.0",
+    "js-yaml": "^4.1.0",
+    "ws": "^8.18.3"
+  }
+}
