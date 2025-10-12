@@ -7,6 +7,9 @@ server:
     accessKeyLength: 16         # accessKey长度 越长越安全 但过长的accessKey可能会导致在使用短信信令设置WS连接信息时短信超长 从而被运营商丢弃
                                 # 建议设置为12-24位
     maxAccessKeyNum: 0          # 最大允许的accessKey数量 0表示不限制 如果你不想与他人共享此服务端实例，可以将此值设置为1
+    crypto:
+      keylen: 16                # 密钥长度
+      iterations: 1000          # 迭代次数
   
   db:
     dbFilePath: data/sqlite3.db # 数据库文件路径 默认为data/sqlite3.db 如无需要请勿修改
