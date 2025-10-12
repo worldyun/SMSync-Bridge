@@ -52,6 +52,7 @@ class DatabaseService {
         // 插入 access_key 到数据库
         const insert = this.db.prepare('INSERT INTO access_key (access_key) VALUES (?)');
         insert.run(accessKey);
+        console.log('新用户加入, 已生成新的 accessKey');
         return { ws_config: accessKey + "@" + this.config.server.websocket.url, success: true };
     }
 

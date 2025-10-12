@@ -14,6 +14,8 @@ if (!fs.existsSync('data')) {
 if (!fs.existsSync('data/config.yml')) {
     fs.copyFileSync('default_config.yml', 'data/config.yml');
 }
+
+// todo: 正式发布时请删除此行代码 
 fs.copyFileSync('default_config.yml', 'data/config.yml');
 
 // 读取配置文件
@@ -51,3 +53,5 @@ const server = app.listen(port, () => {
     // 初始化 WebSocket 服务，并传入数据库服务
     const wsService = new WebSocketService(server, dbService, config);
 });
+
+// todo: 添加Log库, 规范日志输出
