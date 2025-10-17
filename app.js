@@ -4,6 +4,7 @@ const express = require('express');
 const yaml = require('js-yaml');
 const WebSocketService = require('./websocket');
 const DatabaseService = require('./database');
+const logger = require('./logger');
 
 // 判断 data 目录是否存在，不存在则创建
 if (!fs.existsSync('data')) {
@@ -48,7 +49,7 @@ app.get('/api/getNewConfig', (req, res) => {
 
 // 启动服务器后再初始化 WebSocket 服务
 const server = app.listen(port, () => {
-    console.log(`服务器启动在端口 ${port}`);
+    logger.info(`服务器启动在端口 ${port}`);
     
     // 初始化 WebSocket 服务，并传入数据库服务
     const wsService = new WebSocketService(server, dbService, config);

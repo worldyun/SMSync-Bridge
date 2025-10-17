@@ -9,12 +9,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-    "dev": "node -e \"require('fs').rmSync('./data/config.yml', { force: true });\" && nodemon app.js"
+    "dev": "node -e \"require('fs').rmSync('./data/config.yml', { force: true });\" && nodemon app.js",
+    "server": "npm run deploy && npm run remote-start",
+    "deploy": "rsync -av --exclude 'node_modules' --exclude 'data/sqlite3.db' --exclude '.git' . devServer:~/code/SMSync-Bridge/",
+    "remote-start": "ssh devServer 'cd ~/code/SMSync-Bridge && npm install && ps aux | grep \"app.js\" | grep -v grep | awk \"{print \\$2}\" | xargs kill 2>/dev/null || true && export LOG_LEVEL=debug && npm start'"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "express": "^5.1.0",
     "js-yaml": "^4.1.0",
+    "log4js": "^6.9.1",
     "ws": "^8.18.3"
   }
 }
