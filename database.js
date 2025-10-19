@@ -81,12 +81,12 @@ class DatabaseService {
         const [timestamp, hmac] = authorization.split('@');
 
         // 验证时间戳
-        logger.info(timestamp + ', ' + new Date().getTime() / 1000 + ', ' + hmac);
+        logger.debug(timestamp + ', ' + new Date().getTime() / 1000 + ', ' + hmac);
         if (Math.abs(new Date().getTime() / 1000 - timestamp) > this.config.server.websocket.authorizationExpire) {
             return false;
         }
 
-        logger.info('时间戳验证成功');
+        logger.debug('时间戳验证成功');
         if (smsyncBeacoIdString) {
             // 查询smsync_beaco_id_string 获取access_key_id
             const accessKeyId = this.db.prepare('SELECT access_key_id FROM smsync_beaco WHERE smsync_beaco_id_string = ?').get(smsyncBeacoIdString)?.access_key_id;
