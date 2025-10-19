@@ -1,6 +1,7 @@
 const Database = require('better-sqlite3');
 const Util = require('./util');
 const fs = require('fs');
+const logger = require('./logger');
 
 const util = new Util();
 
@@ -24,7 +25,8 @@ class DatabaseService {
             msg_id INTEGER PRIMARY KEY AUTOINCREMENT,
             res_id TEXT NOT NULL,
             msg TEXT NOT NULL,
-            access_key_id INTEGER NOT NULL,
+            direction TEXT NOT NULL,
+            smsync_beaco_id INTEGER NOT NULL,
             created_at DATETIME NOT NULL
         )`);
 
@@ -52,30 +54,23 @@ class DatabaseService {
         // 插入 access_key 到数据库
         const insert = this.db.prepare('INSERT INTO access_key (access_key) VALUES (?)');
         insert.run(accessKey);
-        console.log('新用户加入, 已生成新的 accessKey');
+        logger.info('新用户加入, 已生成新的 accessKey');
         return { ws_config: accessKey + "@" + this.config.server.websocket.url, success: true };
     }
 
     // 保存消息到数据库
-    saveMessage(messageData) {
-        try {
-            const stmt = this.db.prepare(`
-                INSERT INTO message (res_id, msg, access_key_id, created_at)
-                VALUES (?, ?, ?, ?)
-            `);
-
-            const result = stmt.run(
-                messageData.resId || '',
-                messageData.content || messageData.msg || '',
-                messageData.accessKeyId || 1,
-                new Date().toISOString()
-            );
-
-            console.log('消息已保存到数据库，ID:', result.lastInsertRowid);
-            return result.lastInsertRowid;
-        } catch (error) {
-            console.error('保存消息到数据库失败:', error);
+    saveMessage(res_id, msg, direction, smsyncBeaconIdString, timestamp) {
+        // 查询 smsync_beaco表 获取 smsync_beaco_id
+        const smsyncBeacoId = this.db.prepare('SELECT smsync_beaco_id FROM smsync_beaco WHERE smsync_beaco_id_string = ?').get(smsyncBeaconIdString)?.smsync_beaco_id;
+        // 判断smsync_beaco_id 是否存在
+        if (!smsyncBeacoId) {
+            throw new Error('smsync_beaco_id 不存在');
         }
+        logger.debug('保存消息到数据库:', res_id, msg, direction, smsyncBeacoId, timestamp);
+        // 转换时间戳
+        // 插入 message 表 并返回新消息的 msg_id
+        const insert = this.db.prepare('INSERT INTO message (res_id, msg, direction, smsync_beaco_id, created_at) VALUES (?, ?, ?, ?, ?)');
+        return insert.run(res_id, msg, direction, smsyncBeacoId, timestamp).lastInsertRowid;
     }
 
     // 验证 access_key  timestamp@hmac_sha256(timestamp, accessKey)
@@ -86,10 +81,12 @@ class DatabaseService {
         const [timestamp, hmac] = authorization.split('@');
 
         // 验证时间戳
+        logger.info(timestamp + ', ' + new Date().getTime() / 1000 + ', ' + hmac);
         if (Math.abs(new Date().getTime() / 1000 - timestamp) > this.config.server.websocket.authorizationExpire) {
             return false;
         }
 
+        logger.info('时间戳验证成功');
         if (smsyncBeacoIdString) {
             // 查询smsync_beaco_id_string 获取access_key_id
             const accessKeyId = this.db.prepare('SELECT access_key_id FROM smsync_beaco WHERE smsync_beaco_id_string = ?').get(smsyncBeacoIdString)?.access_key_id;
@@ -111,8 +108,12 @@ class DatabaseService {
         // smsync_beaco_id_string 未记录或验证失败
         // 获取所有的access_key 与 access_key_id
         const accessKeys = this.db.prepare('SELECT access_key_id, access_key FROM access_key').all();
+        logger.info(accessKeys)
+
         for (const accessKey of accessKeys) {
+            logger.info('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
             if (util.hmacSha256(timestamp, accessKey.access_key) === hmac) {
+                logger.info('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
                 // 验证成功
                 // 插入 smsync_beaco_id_string
                 if (smsyncBeacoIdString) {
@@ -122,6 +123,40 @@ class DatabaseService {
             }
         }
         return false;
+    }
+
+    // 获取消息历史
+    getMsgHistory(accessKey, data) {
+        // 查询accessKey下所有的smsyncBeacoId 与 smsyncBeacoIdString
+        const smsyncBeacos = this.db.prepare(`SELECT smsync_beaco_id, smsync_beaco_id_string 
+            FROM smsync_beaco 
+            WHERE access_key_id = (SELECT access_key_id FROM access_key WHERE access_key = ?)`).all(accessKey);
+        if (!smsyncBeacos) {
+            return [];
+        }
+        const smsyncBeacoIds = smsyncBeacos.map(smsyncBeaco => smsyncBeaco.smsync_beaco_id);
+
+        // 获取消息历史
+        const messages = this.db.prepare(`SELECT message.res_id, message.msg, message.direction, message.smsync_beaco_id, message.created_at 
+            FROM message WHERE message.smsync_beaco_id IN (${smsyncBeacoIds.map(() => '?').join(',')}) 
+            AND message.created_at >= ? ORDER BY message.created_at ASC`)
+            .all(smsyncBeacoIds, data.startTimestamp || 0).map(message => {
+                smsyncBeacos.forEach(smsyncBeaco => {
+                    if (message.smsync_beaco_id === smsyncBeaco.smsync_beaco_id) {
+                        message.smsync_beaco_id = smsyncBeaco.smsync_beaco_id_string;
+                    }
+                });
+            });
+        return messages;
+    }
+
+    // 获取所有SMSync-Beacon客户端
+    getAllSmsyncBeacoProc(accessKey) {
+        // 获取所有SMSync-Beacon客户端
+        const smsyncBeacos = this.db.prepare(`SELECT smsync_beaco_id_string as smsync_beaco_id, created_at
+            FROM smsync_beaco 
+            WHERE access_key_id = (SELECT access_key_id FROM access_key WHERE access_key = ?)`).all(accessKey);
+        return smsyncBeacos;
     }
 
 }

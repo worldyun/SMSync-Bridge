@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const logger = require('./logger');
 
 class Util {
     constructor(parameters) {
@@ -18,31 +19,70 @@ class Util {
     hmacSha256(data, key) {
         const hmac = crypto.createHmac('sha256', key);
         hmac.update(data);
-        return hmac.digest('hex');
+        return hmac.digest('hex').toUpperCase();
     }
 
     // 获取 WebSocket 加密密钥 pbkdf2
     getWsCryptoKey(salt, accessKey, keylen, iterations) {
-        return crypto.pbkdf2Sync(accessKey, salt, iterations, keylen, 'sha256').toString('hex');
+        logger.debug('salt', salt, Buffer.from(salt, 'base64'));
+        logger.debug('accessKey', accessKey);
+        return crypto.pbkdf2Sync(Buffer.from(accessKey), Buffer.from(salt, 'base64'), iterations, keylen, 'sha256');
     }
 
     // 解密数据
-    msgDecrypt(msg, cryptoKey) {
-        // base64 解码 解码后的前16Byte作为iv,剩下的为数据
-        const buffer = Buffer.from(msg, 'base64');
-        const iv = buffer.subarray(0, 16);
-        const data = buffer.subarray(16);
-        const decipher = crypto.createDecipheriv('aes-256-cbc', cryptoKey, iv);
-        return decipher.update(data, 'hex', 'utf8') + decipher.final('utf8');
+    msgDecrypt(encryptedMsg, cryptoKey) {
+        try {
+            // Base64解码
+            const buffer = Buffer.from(encryptedMsg, 'base64');
+
+            // 检查是否是有效的Base64
+            if (buffer.toString('base64') !== encryptedMsg) {
+                throw new Error('Invalid Base64 string');
+            }
+
+            // 检查数据长度是否足够包含IV
+            if (buffer.length < 16) {
+                throw new Error('Data too short to contain IV');
+            }
+
+            logger.debug('debase64:', buffer.toString('hex'));
+
+            // 前16字节作为IV，剩余部分作为加密数据
+            const iv = buffer.subarray(0, 16);
+            const data = buffer.subarray(16);
+            logger.debug(iv.toString('hex'), data.toString('hex'));
+
+            // 创建解密器，使用AES-128-CBC算法和PKCS7填充
+            const decipher = crypto.createDecipheriv('aes-128-cbc', cryptoKey, iv);
+
+            // 执行解密
+            const decrypted = Buffer.concat([
+                decipher.update(data),
+                decipher.final()
+            ]);
+
+            // 返回解密后的字符串
+            return decrypted.toString('utf8');
+        } catch (error) {
+            console.error('Decryption failed:', error.message);
+            throw error;
+        }
     }
 
     // 加密数据
     msgEncrypt(msg, cryptoKey) {
         // 生成16字节的随机iv
         const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipheriv('aes-256-cbc', cryptoKey, iv);
-        // base64编码
-        return Buffer.concat([iv, cipher.update(msg, 'utf8'), cipher.final()]).toString('base64');
+        const cipher = crypto.createCipheriv('aes-128-cbc', cryptoKey, iv);
+
+        // 加密数据
+        const encrypted = Buffer.concat([
+            cipher.update(Buffer.from(msg)),
+            cipher.final()
+        ]);
+
+        // 将iv和加密数据合并后base64编码
+        return Buffer.concat([iv, encrypted]).toString('base64');
     }
 }
 
