@@ -36,7 +36,6 @@ class WebSocketService {
                 }
                 if (req.headers['smsync-beacon-id']) {
                     ws.smsyncBeaconId = req.headers['smsync-beacon-id'];
-                    logger.info('Smsync-Beacon连接成功, id: ' + req.headers['smsync-beacon-id']);
                 }
                 ws.accessKey = accessKey;
 
@@ -46,9 +45,14 @@ class WebSocketService {
 
                 ws.recvCount = 0;
                 ws.sendCount = 0;
+                if (ws.smsyncBeaconId) {
+                    logger.info('Smsync-Beacon连接成功, id: ' + ws.smsyncBeaconId);
+                } else {
+                    logger.info('Smsync-Hub连接成功');
+                }
 
             } catch (error) {
-                logger.info('连接验证失败', error);
+                logger.error('连接验证失败', error);
                 ws.close();
             }
 
@@ -89,12 +93,16 @@ class WebSocketService {
                             logger.debug('未知操作:', data.action);
                     }
                 } catch (error) {
-                    logger.info('解密失败', error);
+                    logger.error('WS消息解密失败', error);
                 }
             });
 
             ws.on('close', () => {
-                logger.info('客户端断开连接');
+                if (ws.smsyncBeaconId) {
+                    logger.info('Smsync-Beacon断开连接, id: ' + ws.smsyncBeaconId);
+                } else {
+                    logger.info('Smsync-Hub断开连接');
+                }
             });
         });
     }

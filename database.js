@@ -108,12 +108,12 @@ class DatabaseService {
         // smsync_beaco_id_string 未记录或验证失败
         // 获取所有的access_key 与 access_key_id
         const accessKeys = this.db.prepare('SELECT access_key_id, access_key FROM access_key').all();
-        logger.info(accessKeys)
+        logger.debug(accessKeys)
 
         for (const accessKey of accessKeys) {
-            logger.info('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
+            logger.debug('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
             if (util.hmacSha256(timestamp, accessKey.access_key) === hmac) {
-                logger.info('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
+                logger.debug('hmac:' + util.hmacSha256(timestamp, accessKey.access_key))
                 // 验证成功
                 // 插入 smsync_beaco_id_string
                 if (smsyncBeacoIdString) {
