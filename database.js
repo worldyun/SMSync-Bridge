@@ -54,7 +54,7 @@ class DatabaseService {
         // 插入 access_key 到数据库
         const insert = this.db.prepare('INSERT INTO access_key (access_key) VALUES (?)');
         insert.run(accessKey);
-        logger.info('新用户加入, 已生成新的 accessKey');
+        logger.info('新用户加入, 已生成accessKey');
         return { ws_config: accessKey + "@" + this.config.server.websocket.url, success: true };
     }
 
@@ -118,6 +118,7 @@ class DatabaseService {
                 // 插入 smsync_beaco_id_string
                 if (smsyncBeacoIdString) {
                     this.db.prepare('INSERT INTO smsync_beaco (smsync_beaco_id_string, access_key_id) VALUES (?, ?)').run(smsyncBeacoIdString, accessKey.access_key_id);
+                    logger.info('新Smsync-Beacon加入, id:', smsyncBeacoIdString);
                 }
                 return accessKey.access_key;
             }

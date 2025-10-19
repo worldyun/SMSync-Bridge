@@ -15,33 +15,34 @@ class WebSocketService {
     init() {
         this.wss.on('connection', (ws, req) => {
             try {
-                logger.info('新客户端连接, 验证中...');
+                logger.debug('新客户端连接, 验证中...');
 
                 if (!req.headers['authorization']) {
-                    logger.info('验证失败, 缺少授权信息');
+                    logger.debug('验证失败, 缺少授权信息');
                     ws.close();
                     return;
                 }
                 if (!req.headers['salt']) {
-                    logger.info('验证失败, 缺少盐信息');
+                    logger.debug('验证失败, 缺少盐信息');
                     ws.close();
                     return;
                 }
-                logger.info(req.headers['authorization'] + ', ' + req.headers['salt'] + ', ' + req.headers['smsync-beacon-id']);
+                logger.debug(req.headers['authorization'] + ', ' + req.headers['salt'] + ', ' + req.headers['smsync-beacon-id']);
                 const accessKey = this.dbService.verifyAccessKey(req.headers['authorization'], req.headers['smsync-beacon-id'])
                 if (!accessKey) {
-                    logger.info('验证失败, access_key 验证失败');
+                    logger.error('验证失败, access_key 验证失败');
                     ws.close();
                     return;
                 }
                 if (req.headers['smsync-beacon-id']) {
                     ws.smsyncBeaconId = req.headers['smsync-beacon-id'];
+                    logger.info('Smsync-Beacon连接成功, id: ' + req.headers['smsync-beacon-id']);
                 }
                 ws.accessKey = accessKey;
 
                 const wsCryptoKey = util.getWsCryptoKey(req.headers['salt'], accessKey, this.config.server.websocket.crypto.keylen, this.config.server.websocket.crypto.iterations);
                 ws.cryptoKey = wsCryptoKey;
-                logger.info('验证成功, 允许连接: ' + req.headers['authorization'] + ', ' + req.headers['smsync-beacon-id'] + ', ' + wsCryptoKey.toString('HEX'));
+                logger.debug('验证成功, 允许连接: ' + req.headers['authorization'] + ', ' + req.headers['smsync-beacon-id'] + ', ' + wsCryptoKey.toString('HEX'));
 
                 ws.recvCount = 0;
                 ws.sendCount = 0;
