@@ -7,8 +7,8 @@ WORKDIR /smsync-bridge
 # 复制 package.json 和 package-lock.json（如果存在）
 COPY package*.json ./
 
-# 安装项目依赖
-RUN npm ci --only=production
+# 安装项目依赖 使用淘宝镜像
+RUN npm --registry https://registry.npmmirror.com ci --only=production
 
 # 复制应用源代码
 COPY . .
