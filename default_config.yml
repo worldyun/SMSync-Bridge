@@ -1,17 +1,51 @@
 server:
-  port: 8345  # 服务端口
+  port: 8345                  # 服务端口
+  accessKeyLength: 16         # accessKey长度 越长越安全 但过长的accessKey可能会导致在使用短信信令设置WS连接信息时短信超长 从而被运营商丢弃
+                              # 建议设置为12-24位
+  maxAccessKeyNum: 0          # 最大允许的accessKey数量 0表示不限制 如果你不想与他人共享此服务端实例，可以将此值设置为1
 
   websocket:
     path: /ws                   # websocket路径 为缩小短信信令长度 请勿设置过长
-    url: ws://ip:8345/ws # websocket连接地址 请设置为能够访问此服务端实例的地址 端口须与server.port一致 若为80端口可省略
-    accessKeyLength: 16         # accessKey长度 越长越安全 但过长的accessKey可能会导致在使用短信信令设置WS连接信息时短信超长 从而被运营商丢弃
-                                # 建议设置为12-24位
-    maxAccessKeyNum: 0          # 最大允许的accessKey数量 0表示不限制 如果你不想与他人共享此服务端实例，可以将此值设置为1
+    url: ws://ip:8345/ws        # websocket连接地址 请设置为能够访问此服务端实例的地址 端口须与server.port一致 若为80端口可省略
+
+# 以下内容, 如无需要, 请勿修改
+
     authorizationExpire: 300    # auth过期时间
     msgExpire: 300              # 消息过期时间
     crypto:
       keylen: 16                # 密钥长度
       iterations: 1000          # 迭代次数
-  
+
+    requiredHeaders:            # WebSocket 头部配置
+      authorization: authorization
+      salt: salt
+    
+    optionalHeaders:            # WebSocket 可选头部配置
+      smsyncBeaconId: smsync-beacon-id
+    
+    messageActions:             # 消息操作类型
+      heartbeat: heartbeat
+      message: msg
+      getMsgHistory: get_msg_history
+      getAllSmsyncBeaco: get_all_smsync_beaco
+    
+    messageDirections:          # 消息方向
+      up: up
+      down: down
+    
+    webSocketStates:            # WebSocket 状态
+      open: 1
+    
+    messageFields:              # 消息字段名
+      resId: res_id
+      msg: msg
+      timestamp: timestamp
+      action: action
+      count: count
+      direction: direction
+      smsyncBeaconId: smsync_eacon_id
+      smsyncBeaconList: smsync_beaco_list
+      messageList: msg_list
+
   db:
-    dbFilePath: data/sqlite3.db # 数据库文件路径 默认为data/sqlite3.db 如无需要请勿修改
+    dbFilePath: data/sqlite3.db   # 数据库文件路径 默认为data/sqlite3.db 如无需要请勿修改

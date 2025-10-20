@@ -1,29 +1,16 @@
-const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const yaml = require('js-yaml');
 const WebSocketService = require('./websocket');
-const DatabaseService = require('./database');
-const logger = require('./logger');
+const dbService = require('./database');
+const configService = require('./config');
+const Logger = require('./logger');
 
-// 判断 data 目录是否存在，不存在则创建
-if (!fs.existsSync('data')) {
-    fs.mkdirSync('data');
-}
+const logger = new Logger('App');
 
-// 判断 data/config.yml 文件是否存在，不存在则复制 default_config.yml
-if (!fs.existsSync('data/config.yml')) {
-    fs.copyFileSync('default_config.yml', 'data/config.yml');
-}
-
-// 读取配置文件
-const config = yaml.load(fs.readFileSync('data/config.yml', 'utf8'));
-const port = config.server.port || 8080;
+// 获取配置
+const port = configService.getPort();
 
 const app = express();
-
-// 初始化数据库服务
-const dbService = new DatabaseService(config);
 
 // API 路由中间件
 app.use('/api', (req, res, next) => {
@@ -49,5 +36,5 @@ const server = app.listen(port, () => {
     logger.info(`服务器启动在端口 ${port}`);
     
     // 初始化 WebSocket 服务，并传入数据库服务
-    const wsService = new WebSocketService(server, dbService, config);
+    WebSocketService(server);
 });
