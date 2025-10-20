@@ -12,7 +12,7 @@
     "dev": "node -e \"require('fs').rmSync('./data/config.yml', { force: true });\" && nodemon app.js",
     "server": "npm run deploy && npm run remote-start",
     "deploy": "rsync -av --exclude 'node_modules' --exclude 'data/sqlite3.db' --exclude '.git' . devServer:~/code/SMSync-Bridge/",
-    "remote-start": "ssh devServer 'cd ~/code/SMSync-Bridge && npm install && ps aux | grep \"app.js\" | grep -v grep | awk \"{print \\$2}\" | xargs kill 2>/dev/null || true && export LOG_LEVEL=debug && npm start'"
+    "remote-start": "ssh devServer 'cd ~/code/SMSync-Bridge && npm install && ps aux | grep \"app.js\" | grep -v grep | awk \"{print \\$2}\" | xargs kill 2>/dev/null || true && export LOG_LEVEL=debug && npm run dev'"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
