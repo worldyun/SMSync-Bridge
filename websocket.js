@@ -113,8 +113,8 @@ class WebSocketService {
                         case wsConfig.messageActions.getMsgHistory:
                             this.getMsgHistoryProc(ws, data);
                             break;
-                        case wsConfig.messageActions.getAllSmsyncBeaco:
-                            this.getAllSmsyncBeacoProc(ws);
+                        case wsConfig.messageActions.getAllSmsyncBeacon:
+                            this.getAllSmsyncBeaconProc(ws);
                             break;
                         default:
                             logger.debug('未知操作:', data[wsConfig.messageFields.action]);
@@ -238,10 +238,10 @@ class WebSocketService {
         });
     }
 
-    getAllSmsyncBeacoProc(ws) {
-        dbService.getAllSmsyncBeacoProc(ws.accessKey).then((result) => {
+    getAllSmsyncBeaconProc(ws) {
+        dbService.getAllSmsyncBeaconProc(ws.accessKey).then((result) => {
             this.message(ws, { // 修复了原代码中的方法名错误
-                [wsConfig.messageFields.action]: wsConfig.messageActions.getAllSmsyncBeaco, 
+                [wsConfig.messageFields.action]: wsConfig.messageActions.getAllSmsyncBeacon, 
                 [wsConfig.messageFields.smsyncBeaconList]: result
             });
         }).catch((error) => {
