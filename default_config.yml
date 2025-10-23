@@ -27,7 +27,7 @@ server:
       heartbeat: heartbeat
       message: msg
       getMsgHistory: get_msg_history
-      getAllSmsyncBeaco: get_all_smsync_beaco
+      getAllSmsyncBeacon: get_all_smsync_beacon
     
     messageDirections:          # 消息方向
       up: up
@@ -44,7 +44,7 @@ server:
       count: count
       direction: direction
       smsyncBeaconId: smsync_eacon_id
-      smsyncBeaconList: smsync_beaco_list
+      smsyncBeaconList: smsync_beacon_list
       messageList: msg_list
 
   db:

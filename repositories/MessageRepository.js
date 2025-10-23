@@ -8,12 +8,12 @@ class MessageRepository extends BaseRepository {
     
     init() {
         this.db.exec(this.queries['创建 message 表']);
-        this.db.exec(this.queries['创建 smsync_beaco_id created_at 联合索引']);
+        this.db.exec(this.queries['创建 smsync_beacon_id created_at 联合索引']);
     }
     
-    insert(res_id, msg, direction, smsync_beaco_id, created_at) {
+    insert(res_id, msg, direction, smsync_beacon_id, created_at) {
         return this.db.prepare(this.queries['插入消息'])
-            .run(res_id, msg, direction, smsync_beaco_id, created_at)
+            .run(res_id, msg, direction, smsync_beacon_id, created_at)
             .lastInsertRowid;
     }
     
