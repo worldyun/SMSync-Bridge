@@ -25,7 +25,7 @@ RUN ping -c 1 google.com >/dev/null 2>&1 && \
 COPY . .
 
 # 创建数据目录
-RUN mkdir -p data
+RUN rm -rf data && mkdir -p data
 
 # 创建用户组和用户
 RUN addgroup -g 1001 -S nodejs && \

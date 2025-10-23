@@ -82,6 +82,8 @@ class WebSocketService {
                     logger.info('Smsync-Hub连接成功');
                 }
 
+                this.heartbeatProc(ws);
+
             } catch (error) {
                 logger.error('连接验证失败', error);
                 ws.close();
